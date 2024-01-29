@@ -1,0 +1,70 @@
+server:
+  port: 8505
+mybatis-plus:
+  mapper-locations: classpath:com/atguigu/mapper/xml/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 查看日志
+feign:
+  sentinel:
+    enabled: true
+  client:
+    config:
+      default:
+        readTimeout: 90000
+        connectTimeout: 90000
+spring:
+  application:
+    name: tingshu-account
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.157.166:8848
+    sentinel:
+      transport:
+        dashboard: 192.168.157.166:8080
+  main:
+    allow-bean-definition-overriding: true #当遇到同样名字的时候，是否允许覆盖注册
+  data:
+    redis:
+      host: 192.168.157.166
+      port: 6389
+      database: 0
+      timeout: 1800000
+      jedis:
+        pool:
+          max-active: 20 #最大连接数
+          max-wait: -1    #最大阻塞等待时间(负数表示没限制)
+          max-idle: 5    #最大空闲
+          min-idle: 0     #最小空闲
+  kafka:
+    bootstrap-servers: 192.168.157.166:9092
+    producer:
+      retries: 3  #设置大于0的值，则客户端会将发送失败的记录重新发送
+      acks: 1
+      batch-size: 16384
+      buffer-memory: 33554432
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: tingshu_account
+      enable-auto-commit: true
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  datasource:
+    type: com.zaxxer.hikari.HikariDataSource
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://192.168.157.166:3316/tingshu_account?characterEncoding=utf-8&useSSL=false
+    username: root
+    password: 123
+    hikari:
+      connection-test-query: SELECT 1
+      connection-timeout: 60000
+      idle-timeout: 500000
+      max-lifetime: 540000
+      maximum-pool-size: 10
+      minimum-idle: 5
+      pool-name: GuliHikariPool
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
