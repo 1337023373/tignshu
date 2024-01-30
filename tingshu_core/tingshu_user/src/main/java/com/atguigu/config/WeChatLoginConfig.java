@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 
 
 @Configuration
+//说明此类为配置类,这是一个bean
 public class WeChatLoginConfig {
     @Autowired
     private WeChatProperties weChatProperties;
