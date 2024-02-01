@@ -1,7 +1,10 @@
 package com.atguigu.mapper;
 
 import com.atguigu.entity.BaseCategoryView;
+import com.atguigu.vo.CategoryVo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +16,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface BaseCategoryViewMapper extends BaseMapper<BaseCategoryView> {
 
+    List<CategoryVo> getAllCategoryList();
 }

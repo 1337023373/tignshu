@@ -36,7 +36,7 @@ class Service {
             } else if (res.data.code == 208) {
               uni.showModal({
                 title: '提示',
-                content: '登录已过期，192.168.157.166登录',
+                content: '登录已过期，请重新登录',
                 success: function (res) {
                   if (res.confirm) {
                     // 清空缓存

@@ -2,4 +2,24 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.atguigu.mapper.BaseAttributeMapper">
 
+    <resultMap id="category1IdMap" type="com.atguigu.entity.BaseAttribute">
+        <id property="id" column="id"></id>
+        <collection property="attributeValueList" ofType="com.atguigu.entity.BaseAttributeValue" autoMapping="true">
+            <id property="id" column="attribute_value_id"></id>
+        </collection>
+    </resultMap>
+    <select id="getPropertyByCategory1Id" resultMap="category1IdMap">
+        SELECT
+            a.id,
+            a.attribute_name,
+            a.category1_id,
+            b.id attribute_value_id,
+            b.value_name,
+            b.attribute_id
+        FROM
+            base_attribute a
+                INNER JOIN base_attribute_value b ON a.id = b.attribute_id
+        WHERE
+            a.category1_id =#{category1Id}
+    </select>
 </mapper>

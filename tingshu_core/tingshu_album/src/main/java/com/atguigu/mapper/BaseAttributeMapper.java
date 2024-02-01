@@ -2,6 +2,9 @@ package com.atguigu.mapper;
 
 import com.atguigu.entity.BaseAttribute;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Param;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,4 +16,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface BaseAttributeMapper extends BaseMapper<BaseAttribute> {
 
+    List<BaseAttribute> getPropertyByCategory1Id(@Param("category1Id") long category1Id);
 }

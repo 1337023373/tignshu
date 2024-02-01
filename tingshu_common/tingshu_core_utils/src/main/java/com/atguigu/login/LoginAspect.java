@@ -28,7 +28,7 @@ public class LoginAspect {
 
     //    事务设置为环绕通知,以后方法头上有@TingShuLogin的
     @Around("@annotation(com.atguigu.login.TingShuLogin)")
-    public void process(ProceedingJoinPoint joinPoint) throws Throwable {
+    public Object process(ProceedingJoinPoint joinPoint) throws Throwable {
         //拿到请求里面的token信息
 //        因为请求在小程序中，跟以前的从前端浏览器拿数据的httpServletRequest不一样，
 //        RequestContextHolder表示当前容器的上下文，拿到当前线程中的一些属性
@@ -40,7 +40,7 @@ public class LoginAspect {
         String token = request.getHeader("token");
 
         //拿到目标方法上面的注解
-        MethodSignature methodSignature = (MethodSignature)joinPoint.getSignature();
+        MethodSignature methodSignature = (MethodSignature) joinPoint.getSignature();
         Method targetMethod = methodSignature.getMethod();
         TingShuLogin tingShuLogin = targetMethod.getAnnotation(TingShuLogin.class);
 
@@ -51,22 +51,23 @@ public class LoginAspect {
                 throw new GuiguException(ResultCodeEnum.UN_LOGIN);
             }
 //            有token，但是已经过期，那同过token拿到的userinfo信息就是空
-            UserInfo userInfo = (UserInfo) redisTemplate.opsForValue().get(RedisConstant.RANKING_KEY_PREFIX);
+            UserInfo userInfo = (UserInfo) redisTemplate.opsForValue().get(RedisConstant.USER_LOGIN_KEY_PREFIX + token);
             if (userInfo == null) {
                 throw new GuiguException(ResultCodeEnum.UN_LOGIN);
             }
         }
 //        不为空就代表已经登录
         if (!StringUtils.isEmpty(token)) {
-            UserInfo userInfo = (UserInfo) redisTemplate.opsForValue().get(RedisConstant.RANKING_KEY_PREFIX);
+            UserInfo userInfo = (UserInfo) redisTemplate.opsForValue().get(RedisConstant.USER_LOGIN_KEY_PREFIX + token);
             if (userInfo != null) {
 //                就把登录的基本信息保存起来
                 AuthContextHolder.setUserId(userInfo.getId());
                 AuthContextHolder.setUsername(userInfo.getNickname());
 
             }
-//        执行目标方法
-            joinPoint.proceed();
         }
+//        执行目标方法
+//        joinPoint.proceed() 的返回值是连接方法的返回值, 原则上要作为当前方法的返回值
+        return joinPoint.proceed();
     }
 }

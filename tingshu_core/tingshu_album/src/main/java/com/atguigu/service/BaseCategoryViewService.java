@@ -1,6 +1,7 @@
 package com.atguigu.service;
 
 import com.atguigu.entity.BaseCategoryView;
+import com.atguigu.result.RetVal;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 /**
@@ -13,4 +14,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface BaseCategoryViewService extends IService<BaseCategoryView> {
 
+    RetVal getAllCategoryList();
 }
