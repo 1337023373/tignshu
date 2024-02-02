@@ -13,4 +13,9 @@ import com.baomidou.mybatisplus.extension.service.IService;
  */
 public interface TrackInfoService extends IService<TrackInfo> {
 
+    void saveTrackInfo(TrackInfo trackInfo);
+
+    void updateTrackInfoById(TrackInfo trackInfo);
+
+    void deleteTrackInfo(Long trackId);
 }
