@@ -77,9 +77,9 @@ minio:
   secret-key: enjoy6288
   bucket-name: sph
 vod:
-  appId: 1307503602
-  secretId: AKIDxjGYcR0KPFqBH8j6E7l9ICqFOO9fvwiE
-  secretKey: KPFsGPJyNWQ5WheNq55qMcdOuABwSijU
+  appId: 1324194428
+  secretId: AKIDhL8uZ6jN8y36B8ykVJ2t1DVlaZhwyvlf
+  secretKey: HdvNftBQoAQZn5FI96557660qeRDwedX
   region: ap-guangzhou
   procedure: SimpleAesEncryptPreset #任务流
   tempPath: D:\tingshu\temp_path
