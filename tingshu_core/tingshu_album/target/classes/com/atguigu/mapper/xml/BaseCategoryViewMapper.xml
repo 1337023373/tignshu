@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.atguigu.mapper.BaseCategoryViewMapper">
+
+    <resultMap id="categoryMap" type="com.atguigu.vo.CategoryVo">
+<!--        一级分类-->
+        <id property="categoryId" column="category1Id"></id>
+        <result property="categoryName" column="category1Name"></result>
+<!--二级分类-->
+        <collection property="categoryChild" ofType="com.atguigu.vo.CategoryVo">
+            <id property="categoryId" column="category2Id"></id>
+            <result property="categoryName" column="category2Name"></result>
+<!--            三级分类-->
+            <collection property="categoryChild" ofType="com.atguigu.vo.CategoryVo">
+                <id property="categoryId" column="category3Id"></id>
+                <result property="categoryName" column="category3Name"></result>
+            </collection>
+        </collection>
+    </resultMap>
+    <select id="getAllCategoryList" resultMap="categoryMap">
+        select
+            c1.id category1Id,
+            c1.NAME category1Name,
+            c2.id category2Id,
+            c2.NAME category2Name,
+            c3.id category3Id,
+            c3.NAME category3Name
+        from base_category1 c1
+                 left join base_category2 c2 on c1.id = c2.category1_id
+                 left join base_category3 c3 on c2.id = c3.category2_id
+    </select>
+</mapper>
