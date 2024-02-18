@@ -80,6 +80,7 @@ public class WeiXinLoginController {
     @Operation(summary = "获取用户个人信息")
     @GetMapping("/getUserInfo")
     public RetVal getUserInfo() {
+        //获取当前线程的用户id
         Long userId = AuthContextHolder.getUserId();
         UserInfo userInfo = userInfoService.getById(userId);
         UserInfoVo userInfoVo = new UserInfoVo();
