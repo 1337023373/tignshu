@@ -22,7 +22,7 @@ import java.time.Duration;
  * Redis配置类
  *
  */
-//@Configuration
+@Configuration
 @EnableCaching
 public class RedisConfig {
 
