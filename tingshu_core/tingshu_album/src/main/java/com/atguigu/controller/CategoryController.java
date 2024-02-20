@@ -1,6 +1,7 @@
 package com.atguigu.controller;
 
 import com.atguigu.entity.BaseAttribute;
+import com.atguigu.entity.BaseCategoryView;
 import com.atguigu.mapper.BaseAttributeMapper;
 import com.atguigu.result.RetVal;
 import com.atguigu.service.BaseCategoryViewService;
@@ -47,5 +48,14 @@ public class CategoryController {
     public RetVal getPropertyByCategory1Id(@PathVariable long category1Id) {
         List<BaseAttribute> baseAttributeList = baseAttributeMapper.getPropertyByCategory1Id(category1Id);
         return RetVal.ok(baseAttributeList);
+    }
+
+    /**
+     * 搜索模块所使用
+     */
+    @Operation(summary = "根据三级id查询专辑分类信息")
+    @GetMapping("/getCategoryView/{category3Id}")
+    public BaseCategoryView getCategoryView(@PathVariable Long category3Id) {
+        return categoryViewService.getById(category3Id);
     }
 }

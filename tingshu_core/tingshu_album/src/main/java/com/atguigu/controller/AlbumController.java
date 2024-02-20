@@ -47,7 +47,7 @@ public class AlbumController {
 
     @Operation(summary = "根据id查询专辑")
     @GetMapping("/getAlbumInfoById/{albumId}")
-    public RetVal getAlbumInfoById(@PathVariable Long albumId) {
+    public RetVal<AlbumInfo> getAlbumInfoById(@PathVariable Long albumId) {
         AlbumInfo albumInfo = albumInfoService.getAlbumInfoById(albumId);
         return RetVal.ok(albumInfo);
     }

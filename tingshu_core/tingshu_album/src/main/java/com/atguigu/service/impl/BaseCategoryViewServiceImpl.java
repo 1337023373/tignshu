@@ -77,4 +77,5 @@ public class BaseCategoryViewServiceImpl extends ServiceImpl<BaseCategoryViewMap
        List<CategoryVo> categoryVoList =  baseMapper.getAllCategoryList();
         return RetVal.ok(categoryVoList);
     }
+
 }

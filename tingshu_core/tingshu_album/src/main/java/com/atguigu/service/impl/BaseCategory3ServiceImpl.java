@@ -1,10 +1,13 @@
 package com.atguigu.service.impl;
 
+import com.atguigu.entity.BaseAttribute;
 import com.atguigu.entity.BaseCategory3;
 import com.atguigu.mapper.BaseCategory3Mapper;
 import com.atguigu.service.BaseCategory3Service;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 /**
  * <p>

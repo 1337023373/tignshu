@@ -239,6 +239,7 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
 //            保存标签属性
             albumAttributeValueService.saveBatch(albumPropertyValueList);
         }
+        // TODO: 2024/2/20 其他事情 
     }
 
     /**
@@ -252,7 +253,7 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
         LambdaQueryWrapper<AlbumAttributeValue> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(AlbumAttributeValue::getAlbumId, albumId);
         albumAttributeValueService.remove(wrapper);
-
+        // TODO: 2024/2/20 还有事情做 
 //        删除统计属性
         LambdaQueryWrapper<AlbumStat> statWrapper = new LambdaQueryWrapper<>();
         statWrapper.eq(AlbumStat::getAlbumId, albumId);

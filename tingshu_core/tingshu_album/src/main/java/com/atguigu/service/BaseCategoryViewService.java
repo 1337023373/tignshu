@@ -13,6 +13,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2024-01-29
  */
 public interface BaseCategoryViewService extends IService<BaseCategoryView> {
-
     RetVal getAllCategoryList();
 }
