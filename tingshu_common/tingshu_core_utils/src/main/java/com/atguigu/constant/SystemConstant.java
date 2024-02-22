@@ -72,6 +72,7 @@ public class SystemConstant {
     public static final String ALBUM_DISCOUNT ="1405";  // 专辑折扣
     public static final String  ORDER_DERATE_VIP_SERVICE_DISCOUNT="1406";  // VIP服务折扣
 
+    // 专辑类型 1501-公开 1502-私密
     public static final String OPEN_ALBUM="1";
     public static final String PRIVATE_ALBUM="0";
 

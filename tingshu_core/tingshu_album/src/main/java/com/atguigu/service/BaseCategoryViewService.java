@@ -1,8 +1,10 @@
 package com.atguigu.service;
 
 import com.atguigu.entity.BaseCategoryView;
-import com.atguigu.result.RetVal;
+import com.atguigu.vo.CategoryVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -13,5 +15,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
  * @since 2024-01-29
  */
 public interface BaseCategoryViewService extends IService<BaseCategoryView> {
-    RetVal getAllCategoryList();
+    List<CategoryVo> getAllCategoryList(Long category1Id);
 }

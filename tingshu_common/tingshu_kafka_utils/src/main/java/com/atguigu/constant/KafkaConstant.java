@@ -5,7 +5,9 @@ public class KafkaConstant {
     /**
      * 专辑
      */
+    //上架专辑
     public static final String ONSALE_ALBUM_QUEUE = "tingshu.album.upper";
+    //下架专辑
     public static final String OFFSALE_ALBUM_QUEUE = "tingshu.album.lower";
     public static final String UPDATE_ALBUM_BUY_NUM_QUEUE = "tingshu.album.stat.update";
     public static final String QUEUE_ALBUM_ES_STAT_UPDATE = "tingshu.album.es.stat.update";

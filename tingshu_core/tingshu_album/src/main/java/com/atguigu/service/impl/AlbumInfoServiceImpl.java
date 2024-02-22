@@ -1,6 +1,8 @@
 package com.atguigu.service.impl;
 
+import com.atguigu.SearchFeignClient;
 import com.atguigu.cache.TingShuCache;
+import com.atguigu.constant.KafkaConstant;
 import com.atguigu.constant.RedisConstant;
 import com.atguigu.constant.SystemConstant;
 import com.atguigu.entity.AlbumAttributeValue;
@@ -10,6 +12,7 @@ import com.atguigu.mapper.AlbumInfoMapper;
 import com.atguigu.service.AlbumAttributeValueService;
 import com.atguigu.service.AlbumInfoService;
 import com.atguigu.service.AlbumStatService;
+import com.atguigu.service.KafkaService;
 import com.atguigu.util.AuthContextHolder;
 import com.atguigu.util.SleepUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -47,8 +50,15 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
     @Autowired
     private AlbumStatService albumStatService;
 
+    @Autowired
+    private SearchFeignClient searchFeignClient;
+//    调用kafka
+    @Autowired
+    private KafkaService kafkaService;
+
     /**
      * 保存专辑信息
+     *
      * @param albumInfo
      */
     @Override
@@ -78,15 +88,23 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
 //        保存专辑的数据信息
         List<AlbumStat> albumStatList = buildAlbumStat(albumInfo.getId());
         albumStatService.saveBatch(albumStatList);
-        // TODO: 2024/2/17 后面再说
-//        初始化统计数据
+
+//       公开专辑把专辑信息添加到es中,比较封装类中的isOpen是否为公开,如果是,就添加到es中
+        if (SystemConstant.OPEN_ALBUM.equals(albumInfo.getIsOpen())) {
+//            添加到es中,需要远程调用search模块
+           // searchFeignClient.onSaleAlbum(albumInfo.getId());
+//            考虑到后期可能添加一些参数,所以为了避免调整对应的多个代码,这里使用kafka解耦，
+//            这个代码发生类型转换错误,因为kafka的设置里面要求发送string类型
+            kafkaService.sendMessage(KafkaConstant.ONSALE_ALBUM_QUEUE, albumInfo.getId().toString());
+        }
     }
+
     private List<AlbumStat> buildAlbumStat(Long albumId) {
         ArrayList<AlbumStat> albumStatArrayList = new ArrayList<>();
-        initAlbumStat(albumId,albumStatArrayList, SystemConstant.PLAY_NUM_ALBUM);
-        initAlbumStat(albumId,albumStatArrayList,SystemConstant.SUBSCRIBE_NUM_ALBUM);
-        initAlbumStat(albumId,albumStatArrayList,SystemConstant.BUY_NUM_ALBUM);
-        initAlbumStat(albumId,albumStatArrayList,SystemConstant.COMMENT_NUM_ALBUM);
+        initAlbumStat(albumId, albumStatArrayList, SystemConstant.PLAY_NUM_ALBUM);
+        initAlbumStat(albumId, albumStatArrayList, SystemConstant.SUBSCRIBE_NUM_ALBUM);
+        initAlbumStat(albumId, albumStatArrayList, SystemConstant.BUY_NUM_ALBUM);
+        initAlbumStat(albumId, albumStatArrayList, SystemConstant.COMMENT_NUM_ALBUM);
         return albumStatArrayList;
     }
 
@@ -118,22 +136,23 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
     private RedissonClient redissonClient;
     @Autowired
     private RBloomFilter albumBlooFilter;
+
     private AlbumInfo getAlbumInfoRedisson(Long albumId) {
 //        设置锁的key用于标识
-        String cacheKey= RedisConstant.ALBUM_INFO_PREFIX+ albumId;
-        AlbumInfo redisAlbumInfo = (AlbumInfo)redisTemplate.opsForValue().get(cacheKey);
-        String lockKey="lock-"+albumId;
+        String cacheKey = RedisConstant.ALBUM_INFO_PREFIX + albumId;
+        AlbumInfo redisAlbumInfo = (AlbumInfo) redisTemplate.opsForValue().get(cacheKey);
+        String lockKey = "lock-" + albumId;
 //        使用redisson获取锁,如果没有,就加锁,
         RLock lock = redissonClient.getLock(lockKey);
-        if(redisAlbumInfo==null){
+        if (redisAlbumInfo == null) {
             try {
                 lock.lock();
 //                使用布隆过滤器
                 boolean flag = albumBlooFilter.contains(albumId);
-                if(flag){
+                if (flag) {
 //                    查询数据库,并添加redis中的数据
                     AlbumInfo albumInfoDb = getAlbumInfoFromDb(albumId);
-                    redisTemplate.opsForValue().set(cacheKey,albumInfoDb);
+                    redisTemplate.opsForValue().set(cacheKey, albumInfoDb);
                     return albumInfoDb;
                 }
             } finally {
@@ -147,23 +166,24 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
     @Autowired
     private RedisTemplate redisTemplate;
     ThreadLocal<String> threadLocal = new ThreadLocal<>();
+
     public AlbumInfo getAlbumFromRedisWithThreadLocal(Long albumId) {
-        String cacheKey= RedisConstant.ALBUM_INFO_PREFIX+ albumId;
-        AlbumInfo redisAlbumInfo = (AlbumInfo)redisTemplate.opsForValue().get(cacheKey);
-        String lockKey="lock"+albumId;
-        if(redisAlbumInfo==null){
-            boolean accquireLock=false;
+        String cacheKey = RedisConstant.ALBUM_INFO_PREFIX + albumId;
+        AlbumInfo redisAlbumInfo = (AlbumInfo) redisTemplate.opsForValue().get(cacheKey);
+        String lockKey = "lock" + albumId;
+        if (redisAlbumInfo == null) {
+            boolean accquireLock = false;
             String token = threadLocal.get();
-            if(!StringUtils.isEmpty(token)){
-                accquireLock=true;
-            }else{
+            if (!StringUtils.isEmpty(token)) {
+                accquireLock = true;
+            } else {
                 //还有很多代码要执行 1000行代码
                 token = UUID.randomUUID().toString();
                 accquireLock = redisTemplate.opsForValue().setIfAbsent(lockKey, token, 3, TimeUnit.SECONDS);
             }
             if (accquireLock) {
                 AlbumInfo albumInfoDb = getAlbumInfoFromDb(albumId);
-                redisTemplate.opsForValue().set(cacheKey,albumInfoDb);
+                redisTemplate.opsForValue().set(cacheKey, albumInfoDb);
                 String luaScript = "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end";
                 DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>();
                 redisScript.setScriptText(luaScript);
@@ -174,10 +194,10 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
                 return albumInfoDb;
             } else {
                 //目的是为了拿到锁 自旋
-                while(true){
+                while (true) {
                     SleepUtils.millis(50);
                     boolean retryAccquireLock = redisTemplate.opsForValue().setIfAbsent(lockKey, token, 3, TimeUnit.SECONDS);
-                    if(retryAccquireLock){
+                    if (retryAccquireLock) {
                         threadLocal.set(token);
                         break;
                     }
@@ -187,6 +207,7 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
         }
         return redisAlbumInfo;
     }
+
     @NotNull
     private AlbumInfo getAlbumInfoFromRedis(Long albumId) {
         //        手动设置序列化,但是有个弊端是所有需要存入redis的数据都需要手动设置序列化,所以这里要做一个配置类,统一设置序列化
@@ -220,6 +241,7 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
 
     /**
      * 更新专辑
+     *
      * @param albumInfo
      */
     @Override
@@ -239,11 +261,24 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
 //            保存标签属性
             albumAttributeValueService.saveBatch(albumPropertyValueList);
         }
-        // TODO: 2024/2/20 其他事情 
+//       通过点击前端的设置专辑中的设为私密,设置专辑的上架和下架状态,并同步更新到es中
+        //   比较封装类中的isOpen是否为公开,如果是,就更新到es中,注意这里是更新,不是添加,所以改成私密就需要下架,改成公开就需要上架
+        if (SystemConstant.OPEN_ALBUM.equals(albumInfo.getIsOpen())) {
+//           公开, 添加到es中,需要远程调用search模块
+            searchFeignClient.onSaleAlbum(albumInfo.getId());
+//            使用kafka
+            kafkaService.sendMessage(KafkaConstant.ONSALE_ALBUM_QUEUE, albumInfo.getId().toString());
+        } else {
+//            私密,下架
+            searchFeignClient.offSaleAlbum(albumInfo.getId());
+//            使用kafka下架
+            kafkaService.sendMessage(KafkaConstant.OFFSALE_ALBUM_QUEUE, albumInfo.getId().toString());
+        }
     }
 
     /**
      * 删除专辑
+     *
      * @param albumId
      */
     @Override

@@ -2,7 +2,6 @@ package com.atguigu.service.impl;
 
 import com.atguigu.entity.BaseCategoryView;
 import com.atguigu.mapper.BaseCategoryViewMapper;
-import com.atguigu.result.RetVal;
 import com.atguigu.service.BaseCategoryViewService;
 import com.atguigu.vo.CategoryVo;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -21,7 +20,7 @@ import java.util.List;
 @Service
 public class BaseCategoryViewServiceImpl extends ServiceImpl<BaseCategoryViewMapper, BaseCategoryView> implements BaseCategoryViewService {
 
-//    @Override
+    //    @Override
 //    public RetVal getAllCategoryList() {
 //        //a.查询所有的分类信息
 //        List<BaseCategoryView> allCategoryList = list();
@@ -73,9 +72,8 @@ public class BaseCategoryViewServiceImpl extends ServiceImpl<BaseCategoryViewMap
 //        return RetVal.ok(categoryVoList);
 //    }
     @Override
-    public RetVal getAllCategoryList() {
-       List<CategoryVo> categoryVoList =  baseMapper.getAllCategoryList();
-        return RetVal.ok(categoryVoList);
+    public List<CategoryVo> getAllCategoryList(Long category1Id) {
+        return baseMapper.getAllCategoryList(category1Id);
     }
 
 }
