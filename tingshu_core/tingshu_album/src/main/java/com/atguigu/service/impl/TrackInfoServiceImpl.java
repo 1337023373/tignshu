@@ -10,7 +10,9 @@ import com.atguigu.service.TrackInfoService;
 import com.atguigu.service.TrackStatService;
 import com.atguigu.service.VodService;
 import com.atguigu.util.AuthContextHolder;
+import com.atguigu.vo.AlbumTrackListVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,8 +36,10 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
     private TrackStatService trackStatService;
     @Autowired
     private VodService vodService;
+
     /**
      * 新增声音
+     *
      * @param trackInfo
      */
     @Override
@@ -81,14 +85,14 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
 
     private List<TrackStat> buildTrackStat(Long trackId) {
         ArrayList<TrackStat> trackStatArrayList = new ArrayList<>();
-        initTrackStat(trackId, trackStatArrayList,SystemConstant.PLAY_NUM_TRACK);
-        initTrackStat(trackId, trackStatArrayList,SystemConstant.SUBSCRIBE_NUM_ALBUM);
-        initTrackStat(trackId, trackStatArrayList,SystemConstant.BUY_NUM_ALBUM);
-        initTrackStat(trackId, trackStatArrayList,SystemConstant.COMMENT_NUM_TRACK);
+        initTrackStat(trackId, trackStatArrayList, SystemConstant.PLAY_NUM_TRACK);
+        initTrackStat(trackId, trackStatArrayList, SystemConstant.SUBSCRIBE_NUM_ALBUM);
+        initTrackStat(trackId, trackStatArrayList, SystemConstant.BUY_NUM_ALBUM);
+        initTrackStat(trackId, trackStatArrayList, SystemConstant.COMMENT_NUM_TRACK);
         return trackStatArrayList;
     }
 
-//
+    //
     private void initTrackStat(Long trackId, ArrayList<TrackStat> trackStatArrayList, String statType) {
         TrackStat trackStat = new TrackStat();
         trackStat.setTrackId(trackId);
@@ -100,6 +104,7 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
 
     /**
      * 更新声音
+     *
      * @param trackInfo
      */
     @Override
@@ -112,6 +117,7 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
 
     /**
      * 通过id删除声音
+     *
      * @param trackId
      */
     @Override
@@ -119,11 +125,59 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
 //        更新专辑的声音个数
         TrackInfo trackInfo = getById(trackId);
         AlbumInfo albumInfo = albumInfoService.getById(trackInfo.getAlbumId());
-        albumInfo.setIncludeTrackCount(albumInfo.getIncludeTrackCount()-1);
+        albumInfo.setIncludeTrackCount(albumInfo.getIncludeTrackCount() - 1);
         albumInfoService.updateAlbumInfo(albumInfo);
 //        调用腾讯云声音
         vodService.removeTrack(trackInfo.getMediaFileId());
 //        删除统计信息
-        trackStatService.remove(new LambdaQueryWrapper<TrackStat>().eq(TrackStat::getTrackId,trackId));
+        trackStatService.remove(new LambdaQueryWrapper<TrackStat>().eq(TrackStat::getTrackId, trackId));
+    }
+
+    /**
+     * 通过专辑id获取声音分页列表
+     *
+     * @param pageParam
+     * @param trackId
+     * @return
+     */
+
+    @Autowired
+    private TrackInfoMapper trackInfoMapper;
+
+    @Override
+    public IPage<AlbumTrackListVo> getAlbumDetailTrackByPage(IPage<AlbumTrackListVo> pageParam, Long albumId) {
+        //        获取到用户id
+        Long userId = AuthContextHolder.getUserId();
+//        如果要测试未登录状态,把这个id设置为null就可以了
+//        Long userId = null;
+//        通过专辑id,找到专辑信息
+
+        AlbumInfo albumInfo = albumInfoService.getById(albumId);
+//        获取专辑声音和专辑的统计信息,直接去数据库查询
+        pageParam = baseMapper.getAlbumDetailTrackByPage(pageParam, albumId);
+//       获取所有声音
+        List<AlbumTrackListVo> trackListVoList = pageParam.getRecords();
+//      判断用户是否登录
+        if (userId == null) {
+//            没有登录时,分为两种情况,一种是免费,一种是付费
+//            如果是收费的,就把试听之后的图标改成付费的标志
+            if (!SystemConstant.FREE_ALBUM.equals(albumInfo.getPayType())) {
+//                获取需要付费的声音列表,当声音的orderNum大于免费的试听集数,那就是要付费的
+                trackListVoList.forEach(item -> {
+//                    遍历所有声音,当它的排序数字大于试听数字时(这里的排序数字是根据sql中设置的排序顺序来的),就把图标改成付费的标志
+                    if (item.getOrderNum() > albumInfo.getTracksForFree()) {
+                        item.setIsShowPaidMark(true);
+                    }
+                });
+            }else {
+//                当用户登录 ,先查看是否为vip免费
+                if (SystemConstant.VIPFREE_ALBUM.equals(albumInfo.getPayType())) {
+//                    判断是否为vip
+
+                }
+            }
+        }
+        //       如果是免费的,就直接返回,因为图标默认是false,不需要改
+        return pageParam;
     }
 }

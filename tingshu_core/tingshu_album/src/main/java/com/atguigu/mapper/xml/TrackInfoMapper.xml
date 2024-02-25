@@ -5,4 +5,33 @@
     <select id="findUserTrackPage" resultType="com.atguigu.vo.TrackTempVo">
 
     </select>
+
+<!--    根据专辑id,查找专辑信息以及-->
+    <select id="getAlbumDetailTrackByPage" resultType="com.atguigu.vo.AlbumTrackListVo">
+        select
+            c.trackId,
+            any_value(c.trackTitle) as trackTitle,
+            c.mediaDuration,
+            c.orderNum,
+            c.createTime,
+            MAX(IF(c.statType = '0701', c.statNum, 0)) as playStatNum,
+            MAX(IF(c.statType = '0704', c.statNum, 0)) as commentStatNum
+        FROM (SELECT
+                  a.id AS trackId,
+                  a.track_title AS trackTitle,
+                  a.media_duration AS mediaDuration,
+                  a.order_num AS orderNum,
+                  a.create_time AS createTime,
+                  b.stat_type AS statType,
+                  b.stat_num AS statNum
+              FROM
+                  track_info a
+                      LEFT JOIN track_stat b ON a.id = b.track_id
+              WHERE
+                  a.album_id = #{albumId}
+                AND a.is_open = '1'
+                AND a.STATUS = '0501') c
+        GROUP BY c.trackId
+        ORDER BY c.orderNum ASC
+    </select>
 </mapper>

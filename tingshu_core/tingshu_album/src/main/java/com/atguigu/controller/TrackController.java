@@ -7,6 +7,7 @@ import com.atguigu.query.TrackInfoQuery;
 import com.atguigu.result.RetVal;
 import com.atguigu.service.TrackInfoService;
 import com.atguigu.util.AuthContextHolder;
+import com.atguigu.vo.AlbumTrackListVo;
 import com.atguigu.vo.TrackTempVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -72,4 +73,18 @@ public class TrackController {
         trackInfoService.deleteTrackInfo(trackId);
         return RetVal.ok();
     }
+
+    //    http://127.0.0.1/api/album/trackInfo/getAlbumDetailTrackByPage/936/1/10
+    @TingShuLogin
+    @Operation(summary = "根据专辑id获取声音分页列表")
+    @GetMapping("getAlbumDetailTrackByPage/{albumId}/{pageNum}/{pageSize}")
+    public RetVal getAlbumDetailTrackByPage(@PathVariable Long albumId,
+                                            @PathVariable Long pageNum,
+                                           @PathVariable Long pageSize) {
+//    通过专辑id拿到对应的数据
+        IPage<AlbumTrackListVo> pageParam = new Page<>(pageNum, pageSize);
+        pageParam = trackInfoService.getAlbumDetailTrackByPage(pageParam, albumId);
+        return RetVal.ok(pageParam);
+    }
+
 }

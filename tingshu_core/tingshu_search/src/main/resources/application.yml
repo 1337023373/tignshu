@@ -78,4 +78,5 @@ thread:
 
 logging:
   level:
-    com.atguigu.AlbumInfoFeignClient: DEBUG
+#    如何需要给单个微服务加上日志，需要单独的在报名后面写上对应的微服务名
+    com.atguigu: DEBUG
