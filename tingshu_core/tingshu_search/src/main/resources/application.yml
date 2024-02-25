@@ -1,0 +1,81 @@
+server:
+  port: 8502
+mybatis-plus:
+  mapper-locations: classpath:com/atguigu/mapper/xml/*.xml
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 查看日志
+feign:
+  sentinel:
+    enabled: true
+  client:
+    config:
+      default:
+        readTimeout: 90000
+        connectTimeout: 90000
+spring:
+  application:
+    name: tingshu-search
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 192.168.157.166:8848
+    sentinel:
+      transport:
+        dashboard: 192.168.157.166:8080
+  main:
+    allow-bean-definition-overriding: true #当遇到同样名字的时候，是否允许覆盖注册
+  data:
+    redis:
+      host: 192.168.157.166
+      port: 6389
+      database: 0
+      timeout: 1800000
+      jedis:
+        pool:
+          max-active: 20 #最大连接数
+          max-wait: -1    #最大阻塞等待时间(负数表示没限制)
+          max-idle: 5    #最大空闲
+          min-idle: 0     #最小空闲
+  kafka:
+    bootstrap-servers: 192.168.157.166:9092
+    producer:
+      #设置大于0的值，则客户端会将发送失败的记录重新发送
+      retries: 3
+      # ack应答机制，默认1，即只需要确认leader收到消息
+      acks: 1
+      # 同一批次内存大小（默认16K）
+      batch-size: 16384
+      # 生产者内存缓存区大小(32M)
+      buffer-memory: 33554432
+      # key和value的序列化（默认，可以不设置）
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: tingshu-search
+      enable-auto-commit: true
+      # earliest：从头开始消费   latest：从最新的开始消费   默认latest
+      auto-offset-reset: earliest
+      # key和value反序列化（默认，可以不设置）
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+  elasticsearch:
+    uris: http://192.168.157.166:9200
+  autoconfigure:
+    exclude: org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+#  elasticsearch:
+#    uris: http://139.198.127.41:9200
+#    username: elastic
+#    password: 111111
+thread:
+  pool:
+    core-pool-size: 16
+    maximum-pool-size: 32
+    keep-alive-time: 50
+    queue-length: 100
+
+logging:
+  level:
+    com.atguigu.AlbumInfoFeignClient: DEBUG
