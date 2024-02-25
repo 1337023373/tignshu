@@ -1,5 +1,6 @@
 package com.atguigu.service.impl;
 
+import com.atguigu.UserInfoFeignClient;
 import com.atguigu.constant.SystemConstant;
 import com.atguigu.entity.AlbumInfo;
 import com.atguigu.entity.TrackInfo;
@@ -11,14 +12,17 @@ import com.atguigu.service.TrackStatService;
 import com.atguigu.service.VodService;
 import com.atguigu.util.AuthContextHolder;
 import com.atguigu.vo.AlbumTrackListVo;
+import com.atguigu.vo.UserInfoVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -36,6 +40,8 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
     private TrackStatService trackStatService;
     @Autowired
     private VodService vodService;
+    @Autowired
+    private UserInfoFeignClient userInfoFeignClient;
 
     /**
      * 新增声音
@@ -169,15 +175,47 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
                         item.setIsShowPaidMark(true);
                     }
                 });
-            }else {
+            }
+        }
 //                当用户登录 ,先查看是否为vip免费
-                if (SystemConstant.VIPFREE_ALBUM.equals(albumInfo.getPayType())) {
-//                    判断是否为vip
-
-                }
+        if (SystemConstant.VIPFREE_ALBUM.equals(albumInfo.getPayType())) {
+//                    判断是否为vip,通过用户id查询用户是否为vip，通过远程ip,就把图标改成vip的标志
+            UserInfoVo userInfoVo = userInfoFeignClient.getUserInfo(userId).getData();
+            Integer isVip = userInfoVo.getIsVip();
+//            定义一个值，表示用户是否需要付费
+            boolean needPay = false;
+//                    如果不是vip,就把图标试听免费，其他付费的标志
+            if (isVip != 1) {
+                needPay = true;
+            } else if (isVip == 1 && userInfoVo.getVipExpireTime().getTime() < System.currentTimeMillis()) {
+                //                    如果是vip，但是vip已经过期了，就把图标改成付费的标志
+                needPay = true;
+            } else {
+//                        如果是vip，且vip没有过期，就把图标改成vip免费的标志
+                needPay = false;
+            }
+        } else {
+//            是vip付费的情况
+            if (SystemConstant.NEED_PAY_ALBUM.equals(albumInfo.getPayType())) {
+//                获取需要付费的声音列表,当声音的orderNum大于免费的试听集数,那就是要付费的
+                needPay = true;
+            }
+        }
+//        当用户登录，且需要付费，就把图标改成付费的标志
+//        但是需要判断有用户是否已经购买了专辑或者里面的声音
+        if (needPay) {
+//            获取需要付费的声音列表，使用stream流的方式，过滤出需要付费的声音
+            List<AlbumTrackListVo> trackNeedPayList = trackListVoList.stream().filter(item ->
+                            item.getOrderNum() > albumInfo.getTracksForFree())
+                    .collect(Collectors.toList());
+//           判断是否为空，并拿到需要付费的id
+            if (!CollectionUtils.isEmpty(trackNeedPayList)){
+                List<Long> trackIds = trackNeedPayList.stream().map(AlbumTrackListVo::getTrackId).collect(Collectors.toList());
             }
         }
         //       如果是免费的,就直接返回,因为图标默认是false,不需要改
         return pageParam;
     }
 }
+
+
