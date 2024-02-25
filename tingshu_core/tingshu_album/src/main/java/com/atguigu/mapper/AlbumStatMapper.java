@@ -1,6 +1,7 @@
 package com.atguigu.mapper;
 
 import com.atguigu.entity.AlbumStat;
+import com.atguigu.vo.AlbumStatVo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 
 /**
@@ -13,4 +14,5 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
  */
 public interface AlbumStatMapper extends BaseMapper<AlbumStat> {
 
+    AlbumStatVo getAlbumStatInfo(Long albumId);
 }

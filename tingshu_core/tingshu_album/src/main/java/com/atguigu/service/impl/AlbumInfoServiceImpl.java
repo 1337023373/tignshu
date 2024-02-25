@@ -14,6 +14,7 @@ import com.atguigu.service.AlbumInfoService;
 import com.atguigu.service.AlbumStatService;
 import com.atguigu.service.KafkaService;
 import com.atguigu.util.AuthContextHolder;
+import com.atguigu.util.MongoUtil;
 import com.atguigu.util.SleepUtils;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -22,6 +23,9 @@ import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.stereotype.Service;
@@ -52,7 +56,7 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
 
     @Autowired
     private SearchFeignClient searchFeignClient;
-//    调用kafka
+    //    调用kafka
     @Autowired
     private KafkaService kafkaService;
 
@@ -92,7 +96,7 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
 //       公开专辑把专辑信息添加到es中,比较封装类中的isOpen是否为公开,如果是,就添加到es中
         if (SystemConstant.OPEN_ALBUM.equals(albumInfo.getIsOpen())) {
 //            添加到es中,需要远程调用search模块
-           // searchFeignClient.onSaleAlbum(albumInfo.getId());
+            // searchFeignClient.onSaleAlbum(albumInfo.getId());
 //            考虑到后期可能添加一些参数,所以为了避免调整对应的多个代码,这里使用kafka解耦，
 //            这个代码发生类型转换错误,因为kafka的设置里面要求发送string类型
             kafkaService.sendMessage(KafkaConstant.ONSALE_ALBUM_QUEUE, albumInfo.getId().toString());
@@ -293,5 +297,21 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
         LambdaQueryWrapper<AlbumStat> statWrapper = new LambdaQueryWrapper<>();
         statWrapper.eq(AlbumStat::getAlbumId, albumId);
         albumStatService.remove(statWrapper);
+    }
+
+    @Autowired
+    private MongoTemplate mongoTemplate;
+
+    @Override
+    public boolean isSubscribe(Long albumId) {
+        // TODO: 2024/2/25 这里有问题 userid为null
+        Long userId = AuthContextHolder.getUserId();
+        Query query = Query.query(Criteria.where("userId").is(userId).and("albumId").is(albumId));
+        long count = mongoTemplate.count(query, MongoUtil.getCollectionName(MongoUtil.MongoCollectionEnum.USER_SUBSCRIBE, userId));
+
+        if (count > 0) {
+            return true;
+        }
+        return false;
     }
 }

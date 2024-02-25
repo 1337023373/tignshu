@@ -3,10 +3,12 @@ package com.atguigu.controller;
 import com.atguigu.entity.AlbumInfo;
 import com.atguigu.login.TingShuLogin;
 import com.atguigu.mapper.AlbumInfoMapper;
+import com.atguigu.mapper.AlbumStatMapper;
 import com.atguigu.query.AlbumInfoQuery;
 import com.atguigu.result.RetVal;
 import com.atguigu.service.AlbumInfoService;
 import com.atguigu.util.AuthContextHolder;
+import com.atguigu.vo.AlbumStatVo;
 import com.atguigu.vo.AlbumTempVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -25,6 +27,9 @@ public class AlbumController {
     @Autowired
     private AlbumInfoMapper albumInfoMapper;
 
+    @Autowired
+    private AlbumStatMapper albumStatMapper;
+
     @Operation(summary = "分页查询")
     @TingShuLogin
     @PostMapping("/getUserAlbumByPage/{page}/{limit}")
@@ -40,7 +45,7 @@ public class AlbumController {
     @Operation(summary = "保存专辑信息")
     @TingShuLogin
     @PostMapping("/saveAlbumInfo")
-    public RetVal saveAlbumInfo(@RequestBody  AlbumInfo albumInfo) {
+    public RetVal saveAlbumInfo(@RequestBody AlbumInfo albumInfo) {
         albumInfoService.saveAlbumInfo(albumInfo);
         return RetVal.ok();
     }
@@ -65,5 +70,21 @@ public class AlbumController {
     public RetVal deleteAlbumInfo(@PathVariable Long albumId) {
         albumInfoService.deleteAlbumInfo(albumId);
         return RetVal.ok();
+    }
+
+    @Operation(summary = "获取专辑统计信息")
+    @GetMapping("/getAlbumStatInfo/{albumId}")
+    public RetVal<AlbumStatVo> getAlbumStatInfo(@PathVariable Long albumId) {
+        AlbumStatVo albumStatVo = albumStatMapper.getAlbumStatInfo(albumId);
+        return RetVal.ok(albumStatVo);
+    }
+
+    //    http://127.0.0.1/api/album/albumInfo/isSubscribe/936
+    @TingShuLogin
+    @Operation(summary = "是否订阅")
+    @GetMapping("/isSubscribe/{albumId}")
+    public RetVal isSubscribe(@PathVariable Long albumId) {
+       boolean flag = albumInfoService.isSubscribe(albumId);
+        return RetVal.ok(flag);
     }
 }

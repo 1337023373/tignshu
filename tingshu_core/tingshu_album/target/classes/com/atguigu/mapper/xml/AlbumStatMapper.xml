@@ -2,4 +2,14 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.atguigu.mapper.AlbumStatMapper">
 
+    <select id="getAlbumStatInfo" resultType="com.atguigu.vo.AlbumStatVo">
+        select max(if(info.statType = '0401', info.statNum, 0)) playStatNum,
+               max(if(info.statType = '0402', info.statNum, 0)) subscribeStatNum,
+               max(if(info.statType = '0403', info.statNum, 0)) buyStatNum,
+               max(if(info.statType = '0404', info.statNum, 0)) commentStatNum
+        from (select stat.album_id albumId, stat.stat_type statType, stat.stat_num statNum
+              from tingshu_album.album_stat stat
+              where album_id = #{albumId}) info
+        group by info.albumId;
+    </select>
 </mapper>

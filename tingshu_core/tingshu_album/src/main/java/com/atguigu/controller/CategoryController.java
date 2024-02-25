@@ -1,13 +1,16 @@
 package com.atguigu.controller;
 
 import com.atguigu.entity.BaseAttribute;
+import com.atguigu.entity.BaseCategory1;
 import com.atguigu.entity.BaseCategory3;
 import com.atguigu.entity.BaseCategoryView;
 import com.atguigu.mapper.BaseAttributeMapper;
 import com.atguigu.result.RetVal;
+import com.atguigu.service.BaseCategory1Service;
 import com.atguigu.service.BaseCategory3Service;
 import com.atguigu.service.BaseCategoryViewService;
 import com.atguigu.vo.CategoryVo;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +44,8 @@ public class CategoryController {
     private BaseAttributeMapper baseAttributeMapper;
     @Autowired
     private BaseCategory3Service category3Service;
+    @Autowired
+    private BaseCategory1Service category1Service;
 
     //@TingShuLogin
     @Operation(summary = "获取全部分类信息")
@@ -88,5 +93,14 @@ public class CategoryController {
             return RetVal.ok(categoryList.get(0));
         }
         return RetVal.ok();
+    }
+    @Operation(summary = "查询一级分类信息")
+    @GetMapping("/getCategory1")
+    public List<BaseCategory1> getCategory1() {
+//        使用mybatis-plus的方法，直接返回
+        LambdaQueryWrapper<BaseCategory1> wrapper = new LambdaQueryWrapper<>();
+//        通过orderNum排序
+        wrapper.orderByAsc(BaseCategory1::getOrderNum);
+       return category1Service.list(wrapper);
     }
 }
