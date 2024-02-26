@@ -26,6 +26,11 @@ public class VodServiceImpl implements VodService {
     @Autowired
     private VodProperties vodProperties;
 
+    /**
+     * 上传声音文件
+     * @param file
+     * @return
+     */
     @SneakyThrows
     @Override
     public Map<String, Object> uploadTrack(MultipartFile file) {

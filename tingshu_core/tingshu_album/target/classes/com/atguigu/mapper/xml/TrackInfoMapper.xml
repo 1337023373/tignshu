@@ -3,6 +3,74 @@
 <mapper namespace="com.atguigu.mapper.TrackInfoMapper">
 
     <select id="findUserTrackPage" resultType="com.atguigu.vo.TrackTempVo">
+        select
+        any_value(d.albumId) as albumId,
+        d.albumTitle,
+        d.trackId,
+        d.trackTitle,
+        d.coverUrl,
+        d.mediaDuration,
+        d.status,
+        d.createTime,
+        MAX(IF(d.statType = '0701', d.statNum, 0)) as playStatNum,
+        MAX(IF(d.statType = '0702', d.statNum, 0)) as collectStatNum,
+        MAX(IF(d.statType = '0703', d.statNum, 0)) as praiseStatNum,
+        MAX(IF(d.statType = '0704', d.statNum, 0)) as commentStatNum
+        from (select c.id AS albumId,
+        c.album_title AS albumTitle,
+        a.id AS trackId,
+        a.track_title AS trackTitle,
+        a.media_duration AS mediaDuration,
+        IF ( a.cover_url IS NULL OR a.cover_url = '', c.cover_url, a.cover_url ) AS coverUrl,
+        a.STATUS,
+        a.create_time AS createTime,
+        b.stat_type AS statType,
+        b.stat_num AS statNum
+        from track_info a
+        left join track_stat b on a.id=b.track_id
+        left join album_info c on a.album_id=c.id
+        <where>
+            <if test="trackInfoQuery.userId != null">
+                a.user_id = #{trackInfoQuery.userId}
+            </if>
+            <if test="trackInfoQuery.trackTitle != null and trackInfoQuery.trackTitle != ''">
+                and a.track_title like CONCAT('%',#{trackInfoQuery.trackTitle},'%')
+            </if>
+            <if test="trackInfoQuery.status != null and trackInfoQuery.status != ''">
+                and a.status = #{trackInfoQuery.status}
+            </if>
+            and a.is_deleted=0
+        </where>) d
+        GROUP BY d.trackId
+        ORDER BY d.createTime
+    </select>
 
+<!--    根据专辑id,查找专辑信息以及-->
+    <select id="getAlbumDetailTrackByPage" resultType="com.atguigu.vo.AlbumTrackListVo">
+        select
+            c.trackId,
+            any_value(c.trackTitle) as trackTitle,
+            c.mediaDuration,
+            c.orderNum,
+            c.createTime,
+            MAX(IF(c.statType = '0701', c.statNum, 0)) as playStatNum,
+            MAX(IF(c.statType = '0704', c.statNum, 0)) as commentStatNum
+        FROM (SELECT
+                  a.id AS trackId,
+                  a.track_title AS trackTitle,
+                  a.media_duration AS mediaDuration,
+                  a.order_num AS orderNum,
+                  a.create_time AS createTime,
+                  b.stat_type AS statType,
+                  b.stat_num AS statNum
+              FROM
+                  track_info a
+                      LEFT JOIN track_stat b ON a.id = b.track_id
+              WHERE
+                  a.album_id = #{albumId}
+                AND a.is_open = '1'
+                AND a.STATUS = '0501') c
+        GROUP BY c.trackId
+        ORDER BY c.orderNum ASC
     </select>
 </mapper>

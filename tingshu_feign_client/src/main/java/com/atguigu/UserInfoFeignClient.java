@@ -5,9 +5,18 @@ import com.atguigu.vo.UserInfoVo;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+
+import java.util.List;
+import java.util.Map;
 
 @FeignClient(value = "tingshu-user")
 public interface UserInfoFeignClient {
     @GetMapping("/api/user/userInfo/getUserInfo/{userId}")
      RetVal<UserInfoVo> getUserInfo(@PathVariable Long userId) ;
+
+    @PostMapping("/api/user/userInfo/getUserShowPaidMarkOrNot/{albumId}")
+//    通过专辑id和需要付费的声音id,去表中查找
+     RetVal<Map<Long, Boolean>> getUserShowPaidMarkOrNot(@PathVariable Long albumId, @RequestBody List<Long> trackNeedPayIdList);
 }

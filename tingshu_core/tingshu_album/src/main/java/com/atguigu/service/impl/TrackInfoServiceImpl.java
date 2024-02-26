@@ -22,6 +22,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -177,13 +178,15 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
                 });
             }
         }
+
+        //            定义一个值，表示用户是否需要付费
+        boolean needPay = false;
 //                当用户登录 ,先查看是否为vip免费
         if (SystemConstant.VIPFREE_ALBUM.equals(albumInfo.getPayType())) {
 //                    判断是否为vip,通过用户id查询用户是否为vip，通过远程ip,就把图标改成vip的标志
             UserInfoVo userInfoVo = userInfoFeignClient.getUserInfo(userId).getData();
             Integer isVip = userInfoVo.getIsVip();
-//            定义一个值，表示用户是否需要付费
-            boolean needPay = false;
+
 //                    如果不是vip,就把图标试听免费，其他付费的标志
             if (isVip != 1) {
                 needPay = true;
@@ -210,7 +213,12 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
                     .collect(Collectors.toList());
 //           判断是否为空，并拿到需要付费的id
             if (!CollectionUtils.isEmpty(trackNeedPayList)){
-                List<Long> trackIds = trackNeedPayList.stream().map(AlbumTrackListVo::getTrackId).collect(Collectors.toList());
+                List<Long> trackNeedPayIdList = trackNeedPayList.stream().map(AlbumTrackListVo::getTrackId).collect(Collectors.toList());
+//               查询用户是否已经购买了这个声音(从userpaidalbum和userpaidtrack查询),远程调用接口
+                Map<Long, Boolean> paidMarkMap = userInfoFeignClient.getUserShowPaidMarkOrNot(albumId, trackNeedPayIdList).getData();
+                trackNeedPayList.forEach((item)->{
+                    item.setIsShowPaidMark(paidMarkMap.get(item.getTrackId()));
+                });
             }
         }
         //       如果是免费的,就直接返回,因为图标默认是false,不需要改

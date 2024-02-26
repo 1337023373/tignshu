@@ -1,24 +1,32 @@
 package com.atguigu.controller;
 
+import com.atguigu.entity.AlbumInfo;
 import com.atguigu.entity.TrackInfo;
 import com.atguigu.login.TingShuLogin;
 import com.atguigu.mapper.TrackInfoMapper;
 import com.atguigu.query.TrackInfoQuery;
 import com.atguigu.result.RetVal;
+import com.atguigu.service.AlbumInfoService;
 import com.atguigu.service.TrackInfoService;
+import com.atguigu.service.VodService;
 import com.atguigu.util.AuthContextHolder;
 import com.atguigu.vo.AlbumTrackListVo;
 import com.atguigu.vo.TrackTempVo;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
+import java.util.Map;
 
 @Tag(name = "声音接口")
 @RestController
-@RequestMapping("/api/album/trackInfo")
+@RequestMapping("/api/album/trackInfo/")
 public class TrackController {
 
     @Autowired
@@ -26,6 +34,11 @@ public class TrackController {
 
     @Autowired
     private TrackInfoService trackInfoService;
+    @Autowired
+    private AlbumInfoService albumInfoService;
+
+    @Autowired
+    private VodService vodService;
 
     @TingShuLogin
     @Operation(summary = "获取当前用户声音分页列表")
@@ -42,6 +55,20 @@ public class TrackController {
         return RetVal.ok(pageParam);
     }
 
+//    http://127.0.0.1/api/album/trackInfo/findAlbumByUserId
+@TingShuLogin
+@Operation(summary = "通过用户id查询用户专辑信息")
+@GetMapping("findAlbumByUserId")
+public RetVal findAlbumByUserId() {
+    Long userId = AuthContextHolder.getUserId();
+    LambdaQueryWrapper<AlbumInfo> wrapper = new LambdaQueryWrapper<>();
+    wrapper.eq(AlbumInfo::getUserId, userId);
+//    只需要专辑id和专辑名称
+    wrapper.select(AlbumInfo::getId, AlbumInfo::getAlbumTitle);
+    List<AlbumInfo> albumInfoList = albumInfoService.list(wrapper);
+    return RetVal.ok(albumInfoList);
+}
+
     @TingShuLogin
     @Operation(summary = "新增声音")
     @PostMapping("saveTrackInfo")
@@ -49,6 +76,16 @@ public class TrackController {
         trackInfoService.saveTrackInfo(trackInfo);
         return RetVal.ok();
     }
+
+//    http://127.0.0.1/api/album/trackInfo/uploadTrack
+
+@Operation(summary = "上传声音")
+@PostMapping("uploadTrack")
+public RetVal uploadTrack(@RequestBody MultipartFile file){
+    Map<String,Object> retMap = vodService.uploadTrack(file);
+    return RetVal.ok(retMap);
+}
+
 
     @TingShuLogin
     @Operation(summary = "根据id获取声音信息")

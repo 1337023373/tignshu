@@ -1,16 +1,17 @@
 package com.atguigu.controller;
 
 import com.atguigu.entity.UserInfo;
+import com.atguigu.login.TingShuLogin;
 import com.atguigu.result.RetVal;
 import com.atguigu.service.UserInfoService;
 import com.atguigu.vo.UserInfoVo;
 import io.swagger.v3.oas.annotations.Operation;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -34,5 +35,14 @@ public class UserInfoController {
         UserInfoVo userInfoVo = new UserInfoVo();
         BeanUtils.copyProperties(userInfo, userInfoVo);
         return RetVal.ok(userInfoVo);
+    }
+
+    @TingShuLogin
+    @Operation(summary = "获取用户是否需要购买的标识")
+    @PostMapping("/getUserShowPaidMarkOrNot/{albumId}")
+//    通过专辑id和需要付费的声音id,去表中查找
+    public RetVal<Map<Long, Boolean>> getUserShowPaidMarkOrNot(@PathVariable Long albumId, @RequestBody List<Long> trackNeedPayIdList) {
+        Map<Long, Boolean> retMap = userInfoService.getUserShowPaidMarkOrNot(albumId, trackNeedPayIdList);
+        return RetVal.ok(retMap);
     }
 }
