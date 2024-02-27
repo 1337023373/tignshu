@@ -12,10 +12,12 @@ import com.atguigu.service.TrackStatService;
 import com.atguigu.service.VodService;
 import com.atguigu.util.AuthContextHolder;
 import com.atguigu.vo.AlbumTrackListVo;
+import com.atguigu.vo.TrackTempVo;
 import com.atguigu.vo.UserInfoVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -223,6 +225,25 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
         }
         //       如果是免费的,就直接返回,因为图标默认是false,不需要改
         return pageParam;
+    }
+
+    /**
+     * 根据声音id列表获取声音信息列表
+     *
+     * @param trackIdList
+     * @return
+     */
+    @Override
+    public List<TrackTempVo> getTrackVoList(List<Long> trackIdList) {
+        List<TrackInfo> trackInfoList = listByIds(trackIdList);
+//        这个数值需要返回给前端，所以需要把这个转化为vo对象，传回
+        List<TrackTempVo> trackTempVoList = trackInfoList.stream().map(trackInfo -> {
+            TrackTempVo trackTempVo = new TrackTempVo();
+            BeanUtils.copyProperties(trackInfo, trackTempVo);
+            trackTempVo.setTrackId(trackInfo.getId());
+            return trackTempVo;
+        }).collect(Collectors.toList());
+        return trackTempVoList;
     }
 }
 

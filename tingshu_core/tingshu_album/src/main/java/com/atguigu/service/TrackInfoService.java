@@ -2,8 +2,11 @@ package com.atguigu.service;
 
 import com.atguigu.entity.TrackInfo;
 import com.atguigu.vo.AlbumTrackListVo;
+import com.atguigu.vo.TrackTempVo;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -22,4 +25,6 @@ public interface TrackInfoService extends IService<TrackInfo> {
     void deleteTrackInfo(Long trackId);
 
     IPage<AlbumTrackListVo> getAlbumDetailTrackByPage(IPage<AlbumTrackListVo> pageParam, Long albumId);
+
+    List<TrackTempVo> getTrackVoList(List<Long> trackIdList);
 }
