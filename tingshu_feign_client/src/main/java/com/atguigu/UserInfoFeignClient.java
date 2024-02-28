@@ -18,5 +18,9 @@ public interface UserInfoFeignClient {
 
     @PostMapping("/api/user/userInfo/getUserShowPaidMarkOrNot/{albumId}")
 //    通过专辑id和需要付费的声音id,去表中查找
-     RetVal<Map<Long, Boolean>> getUserShowPaidMarkOrNot(@PathVariable Long albumId, @RequestBody List<Long> trackNeedPayIdList);
+    RetVal<Map<Long, Boolean>> getUserShowPaidMarkOrNot(@PathVariable Long albumId, @RequestBody List<Long> trackNeedPayIdList);
+
+//    通过专辑id,找到已经购买的声音id列表
+    @GetMapping("/getUserInfo/{albumId}")
+    public RetVal<List<Long>> getPaidTrackIdList(@PathVariable Long albumId);
 }

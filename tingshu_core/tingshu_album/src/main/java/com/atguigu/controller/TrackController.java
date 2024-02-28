@@ -55,19 +55,19 @@ public class TrackController {
         return RetVal.ok(pageParam);
     }
 
-//    http://127.0.0.1/api/album/trackInfo/findAlbumByUserId
-@TingShuLogin
-@Operation(summary = "通过用户id查询用户专辑信息")
-@GetMapping("findAlbumByUserId")
-public RetVal findAlbumByUserId() {
-    Long userId = AuthContextHolder.getUserId();
-    LambdaQueryWrapper<AlbumInfo> wrapper = new LambdaQueryWrapper<>();
-    wrapper.eq(AlbumInfo::getUserId, userId);
+    //    http://127.0.0.1/api/album/trackInfo/findAlbumByUserId
+    @TingShuLogin
+    @Operation(summary = "通过用户id查询用户专辑信息")
+    @GetMapping("findAlbumByUserId")
+    public RetVal findAlbumByUserId() {
+        Long userId = AuthContextHolder.getUserId();
+        LambdaQueryWrapper<AlbumInfo> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(AlbumInfo::getUserId, userId);
 //    只需要专辑id和专辑名称
-    wrapper.select(AlbumInfo::getId, AlbumInfo::getAlbumTitle);
-    List<AlbumInfo> albumInfoList = albumInfoService.list(wrapper);
-    return RetVal.ok(albumInfoList);
-}
+        wrapper.select(AlbumInfo::getId, AlbumInfo::getAlbumTitle);
+        List<AlbumInfo> albumInfoList = albumInfoService.list(wrapper);
+        return RetVal.ok(albumInfoList);
+    }
 
     @TingShuLogin
     @Operation(summary = "新增声音")
@@ -79,12 +79,12 @@ public RetVal findAlbumByUserId() {
 
 //    http://127.0.0.1/api/album/trackInfo/uploadTrack
 
-@Operation(summary = "上传声音")
-@PostMapping("uploadTrack")
-public RetVal uploadTrack(@RequestBody MultipartFile file){
-    Map<String,Object> retMap = vodService.uploadTrack(file);
-    return RetVal.ok(retMap);
-}
+    @Operation(summary = "上传声音")
+    @PostMapping("uploadTrack")
+    public RetVal uploadTrack(@RequestBody MultipartFile file) {
+        Map<String, Object> retMap = vodService.uploadTrack(file);
+        return RetVal.ok(retMap);
+    }
 
 
     @TingShuLogin
@@ -117,11 +117,19 @@ public RetVal uploadTrack(@RequestBody MultipartFile file){
     @GetMapping("getAlbumDetailTrackByPage/{albumId}/{pageNum}/{pageSize}")
     public RetVal getAlbumDetailTrackByPage(@PathVariable Long albumId,
                                             @PathVariable Long pageNum,
-                                           @PathVariable Long pageSize) {
+                                            @PathVariable Long pageSize) {
 //    通过专辑id拿到对应的数据
         IPage<AlbumTrackListVo> pageParam = new Page<>(pageNum, pageSize);
         pageParam = trackInfoService.getAlbumDetailTrackByPage(pageParam, albumId);
         return RetVal.ok(pageParam);
     }
 
+    //        //http://127.0.0.1/api/album/trackInfo/getTrackListToChoose/27534
+    @TingShuLogin
+    @Operation(summary = "获取专辑集数进行选择")
+    @GetMapping("getTrackListToChoose/{trackId}")
+    public RetVal getTrackListToChoose(@PathVariable Long trackId) {
+        List<Map<String, Object>> list = trackInfoService.getTrackListToChoose(trackId);
+        return RetVal.ok(list);
+    }
 }

@@ -5,15 +5,14 @@ import com.atguigu.constant.KafkaConstant;
 import com.atguigu.constant.SystemConstant;
 import com.atguigu.entity.UserCollect;
 import com.atguigu.entity.UserListenProcess;
+import com.atguigu.service.AlbumInfoService;
 import com.atguigu.service.KafkaService;
 import com.atguigu.service.ListenService;
 import com.atguigu.service.TrackInfoService;
 import com.atguigu.util.AuthContextHolder;
 import com.atguigu.util.MongoUtil;
-import com.atguigu.vo.TrackStatMqVo;
-import com.atguigu.vo.TrackTempVo;
-import com.atguigu.vo.UserCollectVo;
-import com.atguigu.vo.UserListenProcessVo;
+import com.atguigu.vo.*;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.bson.types.ObjectId;
 import org.joda.time.DateTime;
@@ -30,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -44,6 +44,8 @@ public class ListenServiceImpl implements ListenService {
     private KafkaService kafkaService;
     @Autowired
     private TrackInfoService trackInfoService;
+    @Autowired
+    private AlbumInfoService albumInfoService;
 
 
     @Override
@@ -51,7 +53,7 @@ public class ListenServiceImpl implements ListenService {
         Long userId = AuthContextHolder.getUserId();
 //        需要更新播放进度,首先要查询是否有播放进度,如果有,则更新,如果没有,则插入
 //        这个代码的意思是,mongodb拿到表中userid字段的数据与得到的userid相同的数据且trackid字段也与传入的对象的trackid相同的数据,也就是说查询这个播放进度,需要用户id和声音id都指向同一个才能获取,不然就是其他人的声音消息
-        Query query =  Query.query(Criteria.where("userId").is(userId).and("trackId").is(userListenProcessVo.getTrackId()));
+        Query query = Query.query(Criteria.where("userId").is(userId).and("trackId").is(userListenProcessVo.getTrackId()));
         UserListenProcess userListenProcess = mongoTemplate.findOne(query, UserListenProcess.class,
                 MongoUtil.getCollectionName(MongoUtil.MongoCollectionEnum.USER_LISTEN_PROCESS, userId));
 
@@ -72,7 +74,7 @@ public class ListenServiceImpl implements ListenService {
             userListenProcess.setId(ObjectId.get().toString());
 //        保存到mongodb中的集合中
             mongoTemplate.save(userListenProcess, MongoUtil.getCollectionName(MongoUtil.MongoCollectionEnum.USER_LISTEN_PROCESS, userId));
-        }else {
+        } else {
 //           有就 更新mongoDB播放进度
             userListenProcess.setBreakSecond(userListenProcessVo.getBreakSecond());
             userListenProcess.setUpdateTime(new Date());
@@ -107,12 +109,12 @@ public class ListenServiceImpl implements ListenService {
     public BigDecimal getLastPlaySecond(Long trackId) {
 //        从mongoDb中查询播放进度
         Long userId = AuthContextHolder.getUserId();
-        Query query =  Query.query(Criteria.where("userId").is(userId).and("trackId").is(trackId));
+        Query query = Query.query(Criteria.where("userId").is(userId).and("trackId").is(trackId));
         UserListenProcess userListenProcess = mongoTemplate.findOne(query, UserListenProcess.class,
                 MongoUtil.getCollectionName(MongoUtil.MongoCollectionEnum.USER_LISTEN_PROCESS, userId));
 //      判断表中是否有播放进度,没有就不做任何事情,有就返回播放进度
         if (userListenProcess != null) {
-           return userListenProcess.getBreakSecond();
+            return userListenProcess.getBreakSecond();
         }
         return new BigDecimal(0);
     }
@@ -134,7 +136,8 @@ public class ListenServiceImpl implements ListenService {
         if (userListenProcess == null) {
 //            说明没有播放记录
             return null;
-        };
+        }
+        ;
 //        否则把查询到的albumId和trackid返回
         HashMap<String, Object> map = new HashMap<>();
         map.put("albumId", userListenProcess.getAlbumId());
@@ -144,7 +147,8 @@ public class ListenServiceImpl implements ListenService {
 
     /**
      * 点击收藏按钮,收藏声音
-      * @param trackId
+     *
+     * @param trackId
      * @return
      */
     @Override
@@ -165,17 +169,17 @@ public class ListenServiceImpl implements ListenService {
                     MongoUtil.MongoCollectionEnum.USER_COLLECT, userId));
 //            使用kafka更新声音的收藏量
             TrackStatMqVo trackStatMqVo = new TrackStatMqVo();
-            trackStatMqVo.setBusinessNo(UUID.randomUUID().toString().replaceAll("-",""));
+            trackStatMqVo.setBusinessNo(UUID.randomUUID().toString().replaceAll("-", ""));
             trackStatMqVo.setTarckId(trackId);
             trackStatMqVo.setStatType(SystemConstant.COLLECT_NUM_TRACK);
             trackStatMqVo.setCount(-1);
             kafkaService.sendMessage(KafkaConstant.UPDATE_TRACK_STAT_QUEUE, JSON.toJSONString(trackStatMqVo));
             return true;
-        }else {
+        } else {
             mongoTemplate.remove(query, MongoUtil.getCollectionName(MongoUtil.MongoCollectionEnum.USER_COLLECT, userId));
             //发送消息，更新声音统计数量减1
             TrackStatMqVo trackStatMqVo = new TrackStatMqVo();
-            trackStatMqVo.setBusinessNo(UUID.randomUUID().toString().replaceAll("-",""));
+            trackStatMqVo.setBusinessNo(UUID.randomUUID().toString().replaceAll("-", ""));
             trackStatMqVo.setTarckId(trackId);
             trackStatMqVo.setStatType(SystemConstant.COLLECT_NUM_TRACK);
             trackStatMqVo.setCount(-1);
@@ -186,6 +190,7 @@ public class ListenServiceImpl implements ListenService {
 
     /**
      * 查询是否收藏声音
+     *
      * @param trackId
      * @return
      */
@@ -193,7 +198,7 @@ public class ListenServiceImpl implements ListenService {
     public boolean isCollected(Long trackId) {
         Long userId = AuthContextHolder.getUserId();
         Query query = Query.query(Criteria.where("userId").is(userId).and("trackId").is(trackId));
-        long count = mongoTemplate.count(query,MongoUtil.getCollectionName(MongoUtil.MongoCollectionEnum.USER_COLLECT, userId));
+        long count = mongoTemplate.count(query, MongoUtil.getCollectionName(MongoUtil.MongoCollectionEnum.USER_COLLECT, userId));
         if (count > 0) return true;
         return false;
     }
@@ -234,17 +239,93 @@ public class ListenServiceImpl implements ListenService {
                     collect(Collectors.toMap(TrackTempVo::getTrackId, trackTempVo -> trackTempVo));
 
 //            对查询到的用户收藏列表进行迭代
-           userCollectVoList = userCollectList.stream().map(userCollect -> {
+
+            userCollectVoList = userCollectList.stream().map(userCollect -> {
                 UserCollectVo userCollectVo = new UserCollectVo();
                 Long trackId = userCollect.getTrackId();
 //                通过声音id拿到对应的声音详情信息
                 TrackTempVo trackTempVo = trackTempVoMap.get(trackId);
-                BeanUtils.copyProperties( trackTempVo,userCollect);
+                BeanUtils.copyProperties(trackTempVo, userCollect);
                 userCollectVo.setTrackId(trackId);
                 userCollectVo.setCreateTime(userCollect.getCreateTime());
                 return userCollectVo;
             }).collect(Collectors.toList());
         }
         return new Page(page, pageSize, total).setRecords(userCollectVoList);
+    }
+
+    /**
+     * 分页获取播放历史
+     *
+     * @param page
+     * @param pageSize
+     * @return
+     */
+    @Override
+    public IPage getPlayHistoryTrackByPage(Integer page, Integer pageSize) {
+//      先从mongoDb中查找
+        Long userId = AuthContextHolder.getUserId();
+        Query query = Query.query(Criteria.where("userId").is(userId));
+        Pageable pageable = PageRequest.of(page - 1, pageSize);
+        query.with(pageable);
+        Sort sort = Sort.by(Sort.Direction.DESC, "updateTime");
+        query.with(sort);
+//        从mongoDb中查找
+        List<UserListenProcess> userListenProcessList = mongoTemplate.find(query, UserListenProcess.class,
+                MongoUtil.getCollectionName(MongoUtil.MongoCollectionEnum.USER_LISTEN_PROCESS, userId));
+//         获取总数
+        long total = mongoTemplate.count(query.limit(-1).skip(-1L),
+                MongoUtil.getCollectionName(MongoUtil.MongoCollectionEnum.USER_LISTEN_PROCESS, userId));
+//        遍历列表,通过trackid获取,声音id列表
+        List<Long> trackIdList = userListenProcessList.stream()
+                .map(UserListenProcess::getTrackId).collect(Collectors.toList());
+//        根据声音id列表获取声音信息列表
+        List<TrackTempVo> trackVoList = trackInfoService.getTrackVoList(trackIdList);
+//        对查询到的用户收藏列表进行迭代
+        Map<Long, TrackTempVo> trackTempVoMap = trackVoList.stream().
+                collect(Collectors.toMap(TrackTempVo::getTrackId, trackTempVo -> trackTempVo));
+
+//        遍历列表拿到albumid
+        List<Long> albumIdList = userListenProcessList.stream()
+                .map(UserListenProcess::getAlbumId).collect(Collectors.toList());
+//        通过albumid获取专辑信息列表
+        List<AlbumTempVo> albumTempVoList = albumInfoService.getAlbumTempVoList(albumIdList);
+        Map<Long, AlbumTempVo> albumTempVoMap = albumTempVoList.stream().
+                collect(Collectors.toMap(AlbumTempVo::getAlbumId, albumTempVo -> albumTempVo));
+//        创建一个空列表，用于存放用户收听历史记录
+        List<UserListenProcessTempVo> userListenProcessTempVoList = new ArrayList<>();
+
+        if (!CollectionUtils.isEmpty(userListenProcessList)) {
+            userListenProcessTempVoList = userListenProcessList.stream().map(userListenProcess -> {
+//               创建一个空的用户收听历史记录
+                UserListenProcessTempVo userListenProcessTempVo = new UserListenProcessTempVo();
+//                通过albumid拿到对应的专辑详情信息
+                Long trackId = userListenProcess.getTrackId();
+                userListenProcessTempVo.setTrackId(trackId);
+                userListenProcessTempVo.setAlbumId(userListenProcess.getAlbumId());
+                userListenProcessTempVo.setTrackId(userListenProcess.getTrackId());
+                userListenProcessTempVo.setBreakSecond(userListenProcess.getBreakSecond());
+
+                //设置封面
+                AlbumTempVo albumTempVo = albumTempVoMap.get(userListenProcess.getAlbumId());
+                TrackTempVo trackTempVo = trackTempVoMap.get(userListenProcess.getTrackId());
+
+                if (albumTempVo != null) {
+                    userListenProcessTempVo.setCoverUrl(albumTempVo.getCoverUrl());
+                }else {
+                    userListenProcessTempVo.setCoverUrl(trackTempVo.getCoverUrl());
+                }
+                userListenProcessTempVo.setAlbumTitle(albumTempVo.getAlbumTitle());
+                userListenProcessTempVo.setTrackTitle(trackTempVo.getTrackTitle());
+                userListenProcessTempVo.setMediaDuration(trackTempVo.getMediaDuration());
+
+                //设置播放比例
+                String playRate = userListenProcessTempVo.getBreakSecond().divide(userListenProcessTempVo.getMediaDuration(),
+                        2, RoundingMode.HALF_UP).multiply(new BigDecimal(100)) + "%";
+                userListenProcessTempVo.setPlayRate(playRate);
+                return userListenProcessTempVo;
+            }).collect(Collectors.toList());
+        }
+        return new Page(page, pageSize, total).setRecords(userListenProcessTempVoList);
     }
 }

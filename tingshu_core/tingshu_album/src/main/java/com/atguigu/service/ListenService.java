@@ -1,6 +1,7 @@
 package com.atguigu.service;
 
 import com.atguigu.vo.UserListenProcessVo;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 
 import java.math.BigDecimal;
@@ -18,4 +19,6 @@ public interface ListenService {
     boolean isCollected(Long trackId);
 
     Page getUserCollectByPage(Integer page, Integer pageSize);
+
+    IPage getPlayHistoryTrackByPage(Integer page, Integer pageSize);
 }

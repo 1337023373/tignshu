@@ -16,12 +16,14 @@ import com.atguigu.service.KafkaService;
 import com.atguigu.util.AuthContextHolder;
 import com.atguigu.util.MongoUtil;
 import com.atguigu.util.SleepUtils;
+import com.atguigu.vo.AlbumTempVo;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.jetbrains.annotations.NotNull;
 import org.redisson.api.RBloomFilter;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -37,6 +39,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -313,5 +316,23 @@ public class AlbumInfoServiceImpl extends ServiceImpl<AlbumInfoMapper, AlbumInfo
             return true;
         }
         return false;
+    }
+
+    /**
+     * 通过专辑id集合获取专辑信息
+     *
+     * @param albumIdList
+     * @return
+     */
+    @Override
+    public List<AlbumTempVo> getAlbumTempVoList(List<Long> albumIdList) {
+//        通过专辑id集合获取专辑信息
+        List<AlbumInfo> albumInfoList = listByIds(albumIdList);
+//        迭代专辑信息,把专辑信息封装到专辑临时vo中
+        return albumInfoList.stream().map(albumInfo -> {
+            AlbumTempVo albumTempVo = new AlbumTempVo();
+            BeanUtils.copyProperties(albumInfo, albumTempVo);
+            return albumTempVo;
+        }).collect(Collectors.toList());
     }
 }

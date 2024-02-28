@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -27,4 +28,6 @@ public interface TrackInfoService extends IService<TrackInfo> {
     IPage<AlbumTrackListVo> getAlbumDetailTrackByPage(IPage<AlbumTrackListVo> pageParam, Long albumId);
 
     List<TrackTempVo> getTrackVoList(List<Long> trackIdList);
+
+    List<Map<String, Object>> getTrackListToChoose(Long trackId);
 }

@@ -24,4 +24,6 @@ public interface TrackInfoMapper extends BaseMapper<TrackInfo> {
     IPage<AlbumTrackListVo> getAlbumDetailTrackByPage(@Param("pageParam") IPage<AlbumTrackListVo> pageParam, @Param("albumId") Long albumId);
 
     TrackStatVo getTrackStatistics(Long trackId);
+
+
 }

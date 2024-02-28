@@ -1,7 +1,10 @@
 package com.atguigu.service;
 
 import com.atguigu.entity.AlbumInfo;
+import com.atguigu.vo.AlbumTempVo;
 import com.baomidou.mybatisplus.extension.service.IService;
+
+import java.util.List;
 
 /**
  * <p>
@@ -23,4 +26,6 @@ public interface AlbumInfoService extends IService<AlbumInfo> {
 
 
     boolean isSubscribe(Long albumId);
+
+    List<AlbumTempVo> getAlbumTempVoList(List<Long> albumIdList);
 }

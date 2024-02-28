@@ -22,7 +22,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -214,11 +216,11 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
                             item.getOrderNum() > albumInfo.getTracksForFree())
                     .collect(Collectors.toList());
 //           判断是否为空，并拿到需要付费的id
-            if (!CollectionUtils.isEmpty(trackNeedPayList)){
+            if (!CollectionUtils.isEmpty(trackNeedPayList)) {
                 List<Long> trackNeedPayIdList = trackNeedPayList.stream().map(AlbumTrackListVo::getTrackId).collect(Collectors.toList());
 //               查询用户是否已经购买了这个声音(从userpaidalbum和userpaidtrack查询),远程调用接口
                 Map<Long, Boolean> paidMarkMap = userInfoFeignClient.getUserShowPaidMarkOrNot(albumId, trackNeedPayIdList).getData();
-                trackNeedPayList.forEach((item)->{
+                trackNeedPayList.forEach((item) -> {
                     item.setIsShowPaidMark(paidMarkMap.get(item.getTrackId()));
                 });
             }
@@ -245,6 +247,64 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
         }).collect(Collectors.toList());
         return trackTempVoList;
     }
+
+    /**
+     * 获取专辑列表集数进行选择
+     *
+     * @param trackId
+     * @return
+     */
+    @Override
+    public List<Map<String, Object>> getTrackListToChoose(Long trackId) {
+//        如何查出专辑有多少集
+//        通过声音id查询声音信息
+        TrackInfo trackInfo = getById(trackId);
+        Long albumId = trackInfo.getAlbumId();
+//        通过声音信息获取到专辑id,再通过专辑id查询专辑信息
+        AlbumInfo albumInfo = albumInfoService.getById(albumId);
+        //3.获取用户已经购买的声音,远程调用接口
+        List<Long> paidTrackIdList = userInfoFeignClient.getPaidTrackIdList(albumId).getData();
+        //4.获取比当前声音编号大的声音id列表,使用mybatis-plus的方法
+        LambdaQueryWrapper<TrackInfo> wrapper = new LambdaQueryWrapper<TrackInfo>()
+                .eq(TrackInfo::getAlbumId, albumId)
+                .gt(TrackInfo::getOrderNum, trackInfo.getOrderNum());
+        wrapper.select(TrackInfo::getId, TrackInfo::getOrderNum);
+        List<TrackInfo> trackInfoList = list(wrapper);
+//        迭代器遍历,将id放入list中
+        List<Long> trackIdList = trackInfoList.stream().map(TrackInfo::getId).collect(Collectors.toList());
+
+        //5.找出所有未支付的声音
+//        设置一个集合,用来存放未支付的声音
+        List<Long> noPayTrackIdList = new ArrayList<>();
+//        先看已购买的声音是否为空,为空就是全部未购买
+        if (CollectionUtils.isEmpty(paidTrackIdList)) {
+            noPayTrackIdList = trackIdList;
+        } else {
+//            如果不为空,就把未购买的声音放入集合中
+//            未购买的声音就是比当前声音编号大的声音,当它不包含在购买声音的id中
+            noPayTrackIdList = trackIdList.stream().filter(item ->
+                    !paidTrackIdList.contains(item)).collect(Collectors.toList());
+        }
+        //6.构造前端显示的集数信息
+//        每一个阶段就创建一个map放入集合中,把对应的信息写入
+        List<Map<String, Object>> trackList = new ArrayList<>();
+        int size = noPayTrackIdList.size();
+
+        for (int i = 0; i < size; i++) {
+            Map<String, Object> map = new HashMap<>();
+            BigDecimal price = albumInfo.getPrice().multiply(new BigDecimal(i+1));
+
+            String name = i == 0 ? "本集" : "后" + (i + 1) + "集";
+            map.put("name", name);
+            map.put("price", price);
+            map.put("trackCount", i + 1);
+
+            trackList.add(map);
+        }
+
+        return trackList;
+    }
+
 }
 
 

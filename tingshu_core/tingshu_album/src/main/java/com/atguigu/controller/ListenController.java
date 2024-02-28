@@ -64,7 +64,7 @@ public class ListenController {
     @Operation(summary = "点击收藏声音")
     @GetMapping("collectTrack/{trackId}")
     public RetVal<Boolean> collectTrack(@PathVariable Long trackId) {
-        boolean flag=listenService.collectTrack(trackId);
+        boolean flag = listenService.collectTrack(trackId);
         return RetVal.ok(flag);
     }
 
@@ -72,17 +72,25 @@ public class ListenController {
     @Operation(summary = "是否收藏声音")
     @GetMapping("isCollect/{trackId}")
     public RetVal<Boolean> isCollected(@PathVariable Long trackId) {
-        boolean flag=listenService.isCollected(trackId);
+        boolean flag = listenService.isCollected(trackId);
         return RetVal.ok(flag);
     }
 
-//    http://127.0.0.1/api/album/progress/getUserCollectByPage/1/10
-@Operation(summary = "分页获取用户收藏声音列表")
+    //    http://127.0.0.1/api/album/progress/getUserCollectByPage/1/10
+    @Operation(summary = "分页获取用户收藏声音列表")
     @GetMapping("getUserCollectByPage/{page}/{pageSize}")
     @TingShuLogin
     public RetVal getUserCollectByPage(@PathVariable Integer page, @PathVariable Integer pageSize) {
-    IPage userCollectByPage = listenService.getUserCollectByPage(page, pageSize);
-    return RetVal.ok(userCollectByPage);
+        IPage userCollectByPage = listenService.getUserCollectByPage(page, pageSize);
+        return RetVal.ok(userCollectByPage);
     }
 
+    //http://127.0.0.1/api/album/progress/getPlayHistoryTrackByPage/1/10
+    @Operation(summary = "分页获取播放历史")
+    @GetMapping("getPlayHistoryTrackByPage/{page}/{pageSize}")
+    @TingShuLogin
+    public RetVal getPlayHistoryTrackByPage(@PathVariable Integer page, @PathVariable Integer pageSize) {
+        IPage pageParam = listenService.getPlayHistoryTrackByPage(page, pageSize);
+        return RetVal.ok(pageParam);
+    }
 }

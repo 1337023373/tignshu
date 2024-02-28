@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.generator.FastAutoGenerator;
 public class MpGenerator {
     //具体设置 https://blog.csdn.net/cx19910829/article/details/126889724
     public static void main(String[] args) {
-        FastAutoGenerator.create("jdbc:mysql://192.168.157.166:3316/tingshu_album?serverTimezone=GMT%2B8",
+        FastAutoGenerator.create("jdbc:mysql://192.168.157.166:3316/tingshu_order?serverTimezone=GMT%2B8",
                         "root",
                         "123")
                 .globalConfig(builder -> {
@@ -13,7 +13,7 @@ public class MpGenerator {
                             //.enableSwagger() // 开启 swagger 模式
                             .disableOpenDir()
                            // .outputDir("C:\\230710\\code\\tingshu_parent\\tingshu_core\\tingshu_user\\src\\main\\java"); // 指定输出目录
-                            .outputDir("D:\\workspace\\work\\audiobook\\code\\tingshu_parent\\tingshu_core\\tingshu_album\\src\\main\\java"); // 指定输出目录
+                            .outputDir("D:\\workspace\\work\\audiobook\\code\\tingshu_parent\\tingshu_core\\tingshu_order\\src\\main\\java"); // 指定输出目录
                 })
                 .dataSourceConfig(builder -> builder.typeConvertHandler((globalConfig, typeRegistry, metaInfo) -> {
                     return typeRegistry.getColumnType(metaInfo);
