@@ -229,7 +229,7 @@ public class ListenServiceImpl implements ListenService {
         long total = mongoTemplate.count(query.limit(-1).skip(-1L),
                 MongoUtil.getCollectionName(MongoUtil.MongoCollectionEnum.USER_COLLECT, userId));
 //       遍历列表,通过trackid获取,声音id列表
-        List<Long> trackIdList = userCollectList.stream().map(UserCollect::getUserId).collect(Collectors.toList());
+        List<Long> trackIdList = userCollectList.stream().map(UserCollect::getTrackId).collect(Collectors.toList());
         List<UserCollectVo> userCollectVoList = new ArrayList<>();
         if (!CollectionUtils.isEmpty(trackIdList)) {
 //            根据声音id列表获取声音信息列表

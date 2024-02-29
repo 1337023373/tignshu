@@ -30,4 +30,6 @@ public interface TrackInfoService extends IService<TrackInfo> {
     List<TrackTempVo> getTrackVoList(List<Long> trackIdList);
 
     List<Map<String, Object>> getTrackListToChoose(Long trackId);
+
+    List<TrackInfo> getTrackListPrepareToBuy(Long trackId, Integer buyNum);
 }

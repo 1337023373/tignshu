@@ -292,7 +292,7 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
 
         for (int i = 0; i < size; i++) {
             Map<String, Object> map = new HashMap<>();
-            BigDecimal price = albumInfo.getPrice().multiply(new BigDecimal(i+1));
+            BigDecimal price = albumInfo.getPrice().multiply(new BigDecimal(i + 1));
 
             String name = i == 0 ? "本集" : "后" + (i + 1) + "集";
             map.put("name", name);
@@ -303,6 +303,41 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
         }
 
         return trackList;
+    }
+
+    /**
+     * 获取即将购买的声音列表
+     * @param trackId
+     * @param buyNum
+     * @return
+     */
+    @Override
+    public List<TrackInfo> getTrackListPrepareToBuy(Long trackId, Integer buyNum) {
+        //获取当前声音信息
+        TrackInfo trackInfo = getById(trackId);
+//        创建一个集合用于存储即将购买的声音
+        List<TrackInfo> prepareToBuyTrackList = new ArrayList<>();
+//
+        if (buyNum > 0) {
+//          多个声音还需要先排除已经购买的声音,直接远程调用
+            List<Long> paidTrackIdList = userInfoFeignClient.getPaidTrackIdList(trackInfo.getAlbumId()).getData();
+//           通过专辑id拿到对应的声音列表,并通过ordernum进行排序
+            LambdaQueryWrapper<TrackInfo> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(TrackInfo::getAlbumId, trackInfo.getAlbumId());
+            wrapper.ge(TrackInfo::getOrderNum, trackInfo.getOrderNum());
+            wrapper.orderByAsc(TrackInfo::getOrderNum);
+//            如果有购买声音
+            if (!CollectionUtils.isEmpty(paidTrackIdList)) {
+                wrapper.notIn(TrackInfo::getId, paidTrackIdList);
+            }
+
+            wrapper.last("limit" + buyNum);
+            prepareToBuyTrackList = list(wrapper);
+        }else {
+//            否则就是只购买本集
+            prepareToBuyTrackList.add(trackInfo);
+        }
+        return prepareToBuyTrackList;
     }
 
 }

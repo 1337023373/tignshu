@@ -132,4 +132,11 @@ public class TrackController {
         List<Map<String, Object>> list = trackInfoService.getTrackListToChoose(trackId);
         return RetVal.ok(list);
     }
+
+    @Operation(summary = "获取即将购买的声音列表")
+    @GetMapping("getTrackListPrepareToBuy/{trackId}/{buyNum}")
+    public RetVal<List<TrackInfo>> getTrackListPrepareToBuy(@PathVariable Long trackId,@PathVariable Integer buyNum){
+        List<TrackInfo> trackListPrepareToBuy = trackInfoService.getTrackListPrepareToBuy(trackId, buyNum);
+        return RetVal.ok(trackListPrepareToBuy);
+    }
 }

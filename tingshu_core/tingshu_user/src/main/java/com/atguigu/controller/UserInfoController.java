@@ -1,5 +1,6 @@
 package com.atguigu.controller;
 
+import com.atguigu.entity.UserAccount;
 import com.atguigu.entity.UserInfo;
 import com.atguigu.entity.UserPaidTrack;
 import com.atguigu.login.TingShuLogin;
@@ -14,6 +15,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -66,5 +68,16 @@ public class UserInfoController {
         List<Long> paidTrackIdList = userPaidTrackList.stream().map(UserPaidTrack::getTrackId)
                 .collect(Collectors.toList());
         return RetVal.ok(paidTrackIdList);
+    }
+
+    @TingShuLogin
+    @Operation(summary = "获取账号可用金额")
+    @GetMapping("getAvailableAmount")
+    public RetVal<BigDecimal> getAvailableAmount() {
+        Long userId = AuthContextHolder.getUserId();
+//        查询表
+        LambdaQueryWrapper<UserAccount> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserAccount::getUserId, userId);
+        return null;
     }
 }

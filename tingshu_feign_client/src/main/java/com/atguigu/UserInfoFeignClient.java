@@ -1,5 +1,6 @@
 package com.atguigu;
 
+import com.atguigu.entity.VipServiceConfig;
 import com.atguigu.result.RetVal;
 import com.atguigu.vo.UserInfoVo;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -20,7 +21,11 @@ public interface UserInfoFeignClient {
 //    通过专辑id和需要付费的声音id,去表中查找
     RetVal<Map<Long, Boolean>> getUserShowPaidMarkOrNot(@PathVariable Long albumId, @RequestBody List<Long> trackNeedPayIdList);
 
-//    通过专辑id,找到已经购买的声音id列表
+    //    通过专辑id,找到已经购买的声音id列表
     @GetMapping("/getUserInfo/{albumId}")
     public RetVal<List<Long>> getPaidTrackIdList(@PathVariable Long albumId);
+
+    //根据vip获取单个vip配置
+    @GetMapping("/api/user/vipConfig/getVipConfig/{id}")
+    public VipServiceConfig getVipConfig(@PathVariable Long id);
 }
