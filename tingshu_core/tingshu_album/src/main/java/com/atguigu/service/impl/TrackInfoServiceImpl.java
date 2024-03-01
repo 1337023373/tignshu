@@ -264,13 +264,13 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
         AlbumInfo albumInfo = albumInfoService.getById(albumId);
         //3.获取用户已经购买的声音,远程调用接口
         List<Long> paidTrackIdList = userInfoFeignClient.getPaidTrackIdList(albumId).getData();
-        //4.获取比当前声音编号大的声音id列表,使用mybatis-plus的方法
+        //4.获取比当前声音编号大的声音id列表,使用mybatis-plus的方法,gt大于,le小于
         LambdaQueryWrapper<TrackInfo> wrapper = new LambdaQueryWrapper<TrackInfo>()
                 .eq(TrackInfo::getAlbumId, albumId)
                 .gt(TrackInfo::getOrderNum, trackInfo.getOrderNum());
         wrapper.select(TrackInfo::getId, TrackInfo::getOrderNum);
         List<TrackInfo> trackInfoList = list(wrapper);
-//        迭代器遍历,将id放入list中
+//        把查询到的所有大于当前编号的声音列表迭代,将id放入list中
         List<Long> trackIdList = trackInfoList.stream().map(TrackInfo::getId).collect(Collectors.toList());
 
         //5.找出所有未支付的声音
@@ -291,22 +291,35 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
         int size = noPayTrackIdList.size();
 
         for (int i = 0; i < size; i++) {
-            Map<String, Object> map = new HashMap<>();
-            BigDecimal price = albumInfo.getPrice().multiply(new BigDecimal(i + 1));
+//            Map<String, Object> map = new HashMap<>();
+//            BigDecimal price = albumInfo.getPrice().multiply(new BigDecimal(i + 1));
+//
+//            String name = i == 0 ? "本集" : "后" + (i + 1) + "集";
+//            map.put("name", name);
+//            map.put("price", price);
+//            map.put("trackCount", i + 1);
+//
+//            trackList.add(map);
+            if (i == 0 || i == 5 || i == 9 || i == 19) {//集数分别为第6集，第10集，第30集
+                Map<String, Object> map = new HashMap<>();
+                BigDecimal price = albumInfo.getPrice().multiply(new BigDecimal(i + 1));
 
-            String name = i == 0 ? "本集" : "后" + (i + 1) + "集";
-            map.put("name", name);
-            map.put("price", price);
-            map.put("trackCount", i + 1);
+                String name = i == 0 ? "本集" : "后" + (i + 1) + "集";
+                map.put("name", name);
+                map.put("price", price);
+                map.put("trackCount", i + 1);
 
-            trackList.add(map);
+                trackList.add(map);
+            }
         }
+
 
         return trackList;
     }
 
     /**
      * 获取即将购买的声音列表
+     *
      * @param trackId
      * @param buyNum
      * @return
@@ -333,7 +346,7 @@ public class TrackInfoServiceImpl extends ServiceImpl<TrackInfoMapper, TrackInfo
 
             wrapper.last("limit" + buyNum);
             prepareToBuyTrackList = list(wrapper);
-        }else {
+        } else {
 //            否则就是只购买本集
             prepareToBuyTrackList.add(trackInfo);
         }

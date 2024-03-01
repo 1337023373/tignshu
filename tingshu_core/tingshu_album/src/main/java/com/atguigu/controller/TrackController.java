@@ -90,7 +90,7 @@ public class TrackController {
     @TingShuLogin
     @Operation(summary = "根据id获取声音信息")
     @GetMapping("getTrackInfoById/{trackId}")
-    public RetVal getTrackInfoById(@PathVariable Long trackId) {
+    public RetVal<TrackInfo> getTrackInfoById(@PathVariable Long trackId) {
         TrackInfo trackInfo = trackInfoService.getById(trackId);
         return RetVal.ok(trackInfo);
     }

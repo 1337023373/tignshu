@@ -1,6 +1,7 @@
 package com.atguigu.service;
 
 import com.atguigu.entity.UserInfo;
+import com.atguigu.vo.UserPaidRecordVo;
 import com.baomidou.mybatisplus.extension.service.IService;
 
 import java.util.List;
@@ -17,4 +18,6 @@ import java.util.Map;
 public interface UserInfoService extends IService<UserInfo> {
 
     Map<Long, Boolean> getUserShowPaidMarkOrNot(Long albumId, List<Long> needPayTrackIdList);
+
+    void updateUserPaidRecord(UserPaidRecordVo userPaidRecordVo);
 }

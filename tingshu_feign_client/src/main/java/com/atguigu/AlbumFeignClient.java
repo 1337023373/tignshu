@@ -27,4 +27,8 @@ public interface AlbumFeignClient {
     //获取即将购买的声音列表
     @GetMapping("/api/album/albumInfo/getTrackListPrepareToBuy/{trackId}/{buyNum}")
     public RetVal<List<TrackInfo>> getTrackListPrepareToBuy(@PathVariable Long trackId, @PathVariable Integer buyNum);
+
+    //    根据id获取声音信息
+    @GetMapping("/api/album/albumInfo/getTrackInfoById/{trackId}")
+    public RetVal<TrackInfo> getTrackInfoById(@PathVariable Long trackId);
 }

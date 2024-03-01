@@ -22,7 +22,7 @@ public interface UserInfoFeignClient {
     RetVal<Map<Long, Boolean>> getUserShowPaidMarkOrNot(@PathVariable Long albumId, @RequestBody List<Long> trackNeedPayIdList);
 
     //    通过专辑id,找到已经购买的声音id列表
-    @GetMapping("/getUserInfo/{albumId}")
+    @GetMapping("/api/user/userInfo/getPaidTrackIdList/{albumId}")
     public RetVal<List<Long>> getPaidTrackIdList(@PathVariable Long albumId);
 
     //根据vip获取单个vip配置
