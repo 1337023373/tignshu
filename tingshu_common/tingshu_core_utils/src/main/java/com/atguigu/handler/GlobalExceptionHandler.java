@@ -1,22 +1,18 @@
 package com.atguigu.handler;
 
 import com.atguigu.execption.GuiguException;
-import com.atguigu.result.RetVal;
 import com.atguigu.result.ResultCodeEnum;
+import com.atguigu.result.RetVal;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.validation.BindException;
 import org.springframework.validation.BindingResult;
-import org.springframework.validation.FieldError;
 import org.springframework.validation.ObjectError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -64,5 +60,17 @@ public class GlobalExceptionHandler {
         return RetVal.build(null, ResultCodeEnum.PERMISSION);
     }
 
-
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    @ResponseBody
+    public RetVal error(MethodArgumentNotValidException e){
+        //1.拿到发生异常的字段信息
+        BindingResult bindingResult = e.getBindingResult();
+        List<ObjectError> errorList = bindingResult.getAllErrors();
+        List<String> errorMsgList = errorList.stream().map(myError -> {
+            log.error("字段:" + myError.getObjectName() + ",信息:" + myError.getDefaultMessage());
+            return myError.getDefaultMessage();
+        }).collect(Collectors.toList());
+        //2.把这些信息返回给前端
+        return RetVal.fail(errorMsgList);
+    }
 }

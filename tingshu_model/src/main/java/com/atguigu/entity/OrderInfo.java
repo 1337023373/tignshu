@@ -21,7 +21,6 @@ public class OrderInfo extends BaseEntity {
 	@TableField("user_id")
 	private Long userId;
 
-
 	@NotBlank(message = "订单标题不能为空")
 	@Schema(description = "订单标题")
 	@TableField("order_title")
