@@ -16,6 +16,7 @@
         <module>tingshu_user</module>
         <module>tingshu_search</module>
         <module>tingshu_order</module>
+        <module>tingshu_payment</module>
 
     </modules>
 
